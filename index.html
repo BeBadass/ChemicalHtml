@@ -260,6 +260,7 @@
             <div class="particle-item" draggable="true" data-formula="Mg(OH)₂" data-category="precipitate"><div class="sphere" style="background:#c2b0a5;">Mg(OH)₂</div><span>氢氧化镁</span></div>
             <div class="particle-item" draggable="true" data-formula="Fe₂O₃" data-category="precipitate"><div class="sphere" style="background:#b5734b;">Fe₂O₃</div><span>氧化铁</span></div>
             <div class="particle-item" draggable="true" data-formula="CuO" data-category="precipitate"><div class="sphere" style="background:#6b4f3a;">CuO</div><span>氧化铜</span></div>
+            <!-- 新增沉淀 Ag₂CO₃ (虽然库中没有，但作为生成物出现) 为完整也可添加，但拖拽不需要，故不加 -->
 
             <!-- 可溶电解质 (拆成离子) -->
             <div class="particle-item" draggable="true" data-formula="Na₂CO₃" data-category="soluble" data-ions="Na⁺,Na⁺,CO₃²⁻"><div class="cluster"><div class="sphere">Na⁺</div><div class="sphere">Na⁺</div><div class="sphere" style="background:#f5b27a;">CO₃²⁻</div></div><span>碳酸钠</span></div>
@@ -344,8 +345,6 @@
                             type: 'ion',
                             size: 46,
                             virtual: false,
-                            offsetX: Math.random() * 6 - 3,
-                            offsetY: Math.random() * 6 - 3,
                         });
                     });
                 } else if (category === 'precipitate') {
@@ -356,8 +355,6 @@
                         type: 'precipitate',
                         size: 60,
                         virtual: false,
-                        offsetX: Math.random() * 6 - 3,
-                        offsetY: Math.random() * 6 - 3,
                     });
                 } else if (category === 'gas') {
                     newParticles.push({
@@ -367,8 +364,6 @@
                         type: 'gas',
                         size: 58,
                         virtual: false,
-                        offsetX: Math.random() * 6 - 3,
-                        offsetY: Math.random() * 6 - 3,
                     });
                 } else { // molecule
                     newParticles.push({
@@ -378,8 +373,6 @@
                         type: 'molecule',
                         size: 58,
                         virtual: false,
-                        offsetX: Math.random() * 6 - 3,
-                        offsetY: Math.random() * 6 - 3,
                     });
                 }
                 leftParticles.push(...newParticles);
@@ -389,7 +382,7 @@
             // 网格参数：8行8列，每个格子70x70
             const rows = 8, cols = 8;
             const cellWidth = 70, cellHeight = 70;
-            const offsetX = 30, offsetY = 30;
+            const offsetX = 30, offsetY = 30; // 烧杯内边距
 
             // 按类型分区：气体行0-1，离子行2-5，沉淀行6-7
             function getGridPositionByType(particlesList) {
@@ -404,8 +397,11 @@
                     const row = Math.floor(gasIndex / cols);
                     const col = gasIndex % cols;
                     if (row < 2) {
-                        const top = offsetY + row * cellHeight + 5 + (p.offsetY || 0);
-                        const left = offsetX + col * cellWidth + 5 + (p.offsetX || 0);
+                        // 计算格子中心坐标，减去粒子半宽使其居中
+                        const centerX = offsetX + col * cellWidth + cellWidth/2;
+                        const centerY = offsetY + row * cellHeight + cellHeight/2;
+                        const left = centerX - p.size/2;
+                        const top = centerY - p.size/2;
                         posMap.set(p.id, { top, left });
                         gasIndex++;
                     } else {
@@ -419,8 +415,10 @@
                     const row = 2 + Math.floor(ionIndex / cols);
                     const col = ionIndex % cols;
                     if (row < 6) {
-                        const top = offsetY + row * cellHeight + 5 + (p.offsetY || 0);
-                        const left = offsetX + col * cellWidth + 5 + (p.offsetX || 0);
+                        const centerX = offsetX + col * cellWidth + cellWidth/2;
+                        const centerY = offsetY + row * cellHeight + cellHeight/2;
+                        const left = centerX - p.size/2;
+                        const top = centerY - p.size/2;
                         posMap.set(p.id, { top, left });
                         ionIndex++;
                     } else {
@@ -434,14 +432,18 @@
                     const row = 6 + Math.floor(precIndex / cols);
                     const col = precIndex % cols;
                     if (row < 8) {
-                        const top = offsetY + row * cellHeight + 5 + (p.offsetY || 0);
-                        const left = offsetX + col * cellWidth + 5 + (p.offsetX || 0);
+                        const centerX = offsetX + col * cellWidth + cellWidth/2;
+                        const centerY = offsetY + row * cellHeight + cellHeight/2;
+                        const left = centerX - p.size/2;
+                        const top = centerY - p.size/2;
                         posMap.set(p.id, { top, left });
                         precIndex++;
                     } else {
                         // 极少情况，放在最后一行同一列
-                        const top = offsetY + 7 * cellHeight + 5 + (p.offsetY || 0);
-                        const left = offsetX + (precIndex % cols) * cellWidth + 5 + (p.offsetX || 0);
+                        const centerX = offsetX + (precIndex % cols) * cellWidth + cellWidth/2;
+                        const centerY = offsetY + 7 * cellHeight + cellHeight/2;
+                        const left = centerX - p.size/2;
+                        const top = centerY - p.size/2;
                         posMap.set(p.id, { top, left });
                     }
                 });
@@ -728,7 +730,7 @@
                     { label:'H₂O', count:1, type:'molecule', style:'background:#a5d0e1;' },
                     { label:'CO₂', count:1, type:'gas', style:'background:#b0b0b0;' }
                 ]},
-                // 26. 酸与难溶性碱的反应 (全部重新整理，确保无遗漏) ===================
+                // 26. 酸与难溶性碱的反应 ===================
                 // Cu(OH)₂ + 2HCl → CuCl₂ + 2H₂O
                 { reactants: { 'Cu(OH)₂':1, 'H⁺':2, 'Cl⁻':2 },
                   products: [
@@ -813,7 +815,7 @@
                     { label:'NO₃⁻', count:3, type:'ion', style:'background:#9fc7e0;' },
                     { label:'H₂O', count:3, type:'molecule', style:'background:#a5d0e1;' }
                 ]},
-                // 27. 非复分解反应（带标记）=========================================
+                // 27. 非复分解反应 =========================================
                 // CO₂ + 2NaOH → Na₂CO₃ + H₂O
                 { reactants: { 'CO₂':1, 'Na⁺':2, 'OH⁻':2 },
                   products: [
@@ -844,7 +846,155 @@
                     { label:'NH₃·H₂O', count:1, type:'molecule', style:'background:#b8d86b;' }
                   ],
                   nonDoubleDecomposition: true
-                }
+                },
+                // ========== 新增反应：用户补充部分 ==========
+                // 一、碳酸钠相关
+                // Na₂CO₃ + Ba(OH)₂ → BaCO₃↓ + 2NaOH
+                { reactants: { 'Na⁺':2, 'CO₃²⁻':1, 'Ba²⁺':1, 'OH⁻':2 },
+                  products: [
+                    { label:'BaCO₃', count:1, type:'precipitate', style:'background:#b7a07e; width:60px;' },
+                    { label:'Na⁺', count:2, type:'ion', style:'background:#e6c9a0;' },
+                    { label:'OH⁻', count:2, type:'ion', style:'background:#fbb0c0;' }
+                ]},
+                // Na₂CO₃ + 2AgNO₃ → Ag₂CO₃↓ + 2NaNO₃
+                { reactants: { 'Na⁺':2, 'CO₃²⁻':1, 'Ag⁺':2, 'NO₃⁻':2 },
+                  products: [
+                    { label:'Ag₂CO₃', count:1, type:'precipitate', style:'background:#b7a07e; width:60px;' }, // 使用类似碳酸盐颜色
+                    { label:'Na⁺', count:2, type:'ion', style:'background:#e6c9a0;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' }
+                ]},
+                // 二、氯化钡相关
+                // BaCl₂ + (NH₄)₂SO₄ → BaSO₄↓ + 2NH₄Cl
+                { reactants: { 'Ba²⁺':1, 'Cl⁻':2, 'NH₄⁺':2, 'SO₄²⁻':1 },
+                  products: [
+                    { label:'BaSO₄', count:1, type:'precipitate', style:'background:#9dacb5; width:60px;' },
+                    { label:'NH₄⁺', count:2, type:'ion', style:'background:#b5c9a3;' },
+                    { label:'Cl⁻', count:2, type:'ion', style:'background:#b8f0b8;' }
+                ]},
+                // BaCl₂ + 2AgNO₃ → 2AgCl↓ + Ba(NO₃)₂
+                { reactants: { 'Ba²⁺':1, 'Cl⁻':2, 'Ag⁺':2, 'NO₃⁻':2 },
+                  products: [
+                    { label:'AgCl', count:2, type:'precipitate', style:'background:#a7a7a7; width:60px;' },
+                    { label:'Ba²⁺', count:1, type:'ion', style:'background:#a2cfcf;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' }
+                ]},
+                // BaCl₂ + CuSO₄ → BaSO₄↓ + CuCl₂
+                { reactants: { 'Ba²⁺':1, 'Cl⁻':2, 'Cu²⁺':1, 'SO₄²⁻':1 },
+                  products: [
+                    { label:'BaSO₄', count:1, type:'precipitate', style:'background:#9dacb5; width:60px;' },
+                    { label:'Cu²⁺', count:1, type:'ion', style:'background:#ce9b6b;' },
+                    { label:'Cl⁻', count:2, type:'ion', style:'background:#b8f0b8;' }
+                ]},
+                // 3BaCl₂ + Fe₂(SO₄)₃ → 3BaSO₄↓ + 2FeCl₃
+                { reactants: { 'Ba²⁺':3, 'Cl⁻':6, 'Fe³⁺':2, 'SO₄²⁻':3 },
+                  products: [
+                    { label:'BaSO₄', count:3, type:'precipitate', style:'background:#9dacb5; width:60px;' },
+                    { label:'Fe³⁺', count:2, type:'ion', style:'background:#b8735b;' },
+                    { label:'Cl⁻', count:6, type:'ion', style:'background:#b8f0b8;' }
+                ]},
+                // 三、氯化钙相关
+                // CaCl₂ + 2AgNO₃ → 2AgCl↓ + Ca(NO₃)₂
+                { reactants: { 'Ca²⁺':1, 'Cl⁻':2, 'Ag⁺':2, 'NO₃⁻':2 },
+                  products: [
+                    { label:'AgCl', count:2, type:'precipitate', style:'background:#a7a7a7; width:60px;' },
+                    { label:'Ca²⁺', count:1, type:'ion', style:'background:#bcb088;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' }
+                ]},
+                // 四、硫酸铵相关
+                // (NH₄)₂SO₄ + Ba(OH)₂ → BaSO₄↓ + 2NH₃↑ + 2H₂O
+                { reactants: { 'NH₄⁺':2, 'SO₄²⁻':1, 'Ba²⁺':1, 'OH⁻':2 },
+                  products: [
+                    { label:'BaSO₄', count:1, type:'precipitate', style:'background:#9dacb5; width:60px;' },
+                    { label:'NH₃', count:2, type:'gas', style:'background:#b8d86b;' },
+                    { label:'H₂O', count:2, type:'molecule', style:'background:#a5d0e1;' }
+                ]},
+                // 五、氢氧化钡与盐反应
+                // 3Ba(OH)₂ + 2FeCl₃ → 2Fe(OH)₃↓ + 3BaCl₂
+                { reactants: { 'Ba²⁺':3, 'OH⁻':6, 'Fe³⁺':2, 'Cl⁻':6 },
+                  products: [
+                    { label:'Fe(OH)₃', count:2, type:'precipitate', style:'background:#c08a5a; width:60px;' },
+                    { label:'Ba²⁺', count:3, type:'ion', style:'background:#a2cfcf;' },
+                    { label:'Cl⁻', count:6, type:'ion', style:'background:#b8f0b8;' }
+                ]},
+                // 3Ba(OH)₂ + Fe₂(SO₄)₃ → 2Fe(OH)₃↓ + 3BaSO₄↓
+                { reactants: { 'Ba²⁺':3, 'OH⁻':6, 'Fe³⁺':2, 'SO₄²⁻':3 },
+                  products: [
+                    { label:'Fe(OH)₃', count:2, type:'precipitate', style:'background:#c08a5a; width:60px;' },
+                    { label:'BaSO₄', count:3, type:'precipitate', style:'background:#9dacb5; width:60px;' }
+                ]},
+                // 3Ba(OH)₂ + 2AlCl₃ → 2Al(OH)₃↓ + 3BaCl₂
+                { reactants: { 'Ba²⁺':3, 'OH⁻':6, 'Al³⁺':2, 'Cl⁻':6 },
+                  products: [
+                    { label:'Al(OH)₃', count:2, type:'precipitate', style:'background:#b3a9b0; width:60px;' },
+                    { label:'Ba²⁺', count:3, type:'ion', style:'background:#a2cfcf;' },
+                    { label:'Cl⁻', count:6, type:'ion', style:'background:#b8f0b8;' }
+                ]},
+                // Ba(OH)₂ + Mg(NO₃)₂ → Mg(OH)₂↓ + Ba(NO₃)₂
+                { reactants: { 'Ba²⁺':1, 'OH⁻':2, 'Mg²⁺':1, 'NO₃⁻':2 },
+                  products: [
+                    { label:'Mg(OH)₂', count:1, type:'precipitate', style:'background:#c2b0a5; width:60px;' },
+                    { label:'Ba²⁺', count:1, type:'ion', style:'background:#a2cfcf;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' }
+                ]},
+                // Ba(OH)₂ + Na₂SO₄ → BaSO₄↓ + 2NaOH
+                { reactants: { 'Ba²⁺':1, 'OH⁻':2, 'Na⁺':2, 'SO₄²⁻':1 },
+                  products: [
+                    { label:'BaSO₄', count:1, type:'precipitate', style:'background:#9dacb5; width:60px;' },
+                    { label:'Na⁺', count:2, type:'ion', style:'background:#e6c9a0;' },
+                    { label:'OH⁻', count:2, type:'ion', style:'background:#fbb0c0;' }
+                ]},
+                // 六、硝酸与碱、氧化物、盐反应
+                // 2HNO₃ + Ba(OH)₂ → Ba(NO₃)₂ + 2H₂O
+                { reactants: { 'H⁺':2, 'NO₃⁻':2, 'Ba²⁺':1, 'OH⁻':2 },
+                  products: [
+                    { label:'Ba²⁺', count:1, type:'ion', style:'background:#a2cfcf;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' },
+                    { label:'H₂O', count:2, type:'molecule', style:'background:#a5d0e1;' }
+                ]},
+                // HNO₃ + NaOH → NaNO₃ + H₂O
+                { reactants: { 'H⁺':1, 'NO₃⁻':1, 'Na⁺':1, 'OH⁻':1 },
+                  products: [
+                    { label:'Na⁺', count:1, type:'ion', style:'background:#e6c9a0;' },
+                    { label:'NO₃⁻', count:1, type:'ion', style:'background:#9fc7e0;' },
+                    { label:'H₂O', count:1, type:'molecule', style:'background:#a5d0e1;' }
+                ]},
+                // Fe₂O₃ + 6HNO₃ → 2Fe(NO₃)₃ + 3H₂O
+                { reactants: { 'Fe₂O₃':1, 'H⁺':6, 'NO₃⁻':6 },
+                  products: [
+                    { label:'Fe³⁺', count:2, type:'ion', style:'background:#b8735b;' },
+                    { label:'NO₃⁻', count:6, type:'ion', style:'background:#9fc7e0;' },
+                    { label:'H₂O', count:3, type:'molecule', style:'background:#a5d0e1;' }
+                ]},
+                // CuO + 2HNO₃ → Cu(NO₃)₂ + H₂O
+                { reactants: { 'CuO':1, 'H⁺':2, 'NO₃⁻':2 },
+                  products: [
+                    { label:'Cu²⁺', count:1, type:'ion', style:'background:#ce9b6b;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' },
+                    { label:'H₂O', count:1, type:'molecule', style:'background:#a5d0e1;' }
+                ]},
+                // Na₂CO₃ + 2HNO₃ → 2NaNO₃ + H₂O + CO₂↑
+                { reactants: { 'Na⁺':2, 'CO₃²⁻':1, 'H⁺':2, 'NO₃⁻':2 },
+                  products: [
+                    { label:'Na⁺', count:2, type:'ion', style:'background:#e6c9a0;' },
+                    { label:'NO₃⁻', count:2, type:'ion', style:'background:#9fc7e0;' },
+                    { label:'H₂O', count:1, type:'molecule', style:'background:#a5d0e1;' },
+                    { label:'CO₂', count:1, type:'gas', style:'background:#b0b0b0;' }
+                ]},
+                // 七、硝酸银与盐反应
+                // 3AgNO₃ + FeCl₃ → 3AgCl↓ + Fe(NO₃)₃
+                { reactants: { 'Ag⁺':3, 'NO₃⁻':3, 'Fe³⁺':1, 'Cl⁻':3 },
+                  products: [
+                    { label:'AgCl', count:3, type:'precipitate', style:'background:#a7a7a7; width:60px;' },
+                    { label:'Fe³⁺', count:1, type:'ion', style:'background:#b8735b;' },
+                    { label:'NO₃⁻', count:3, type:'ion', style:'background:#9fc7e0;' }
+                ]},
+                // 3AgNO₃ + AlCl₃ → 3AgCl↓ + Al(NO₃)₃
+                { reactants: { 'Ag⁺':3, 'NO₃⁻':3, 'Al³⁺':1, 'Cl⁻':3 },
+                  products: [
+                    { label:'AgCl', count:3, type:'precipitate', style:'background:#a7a7a7; width:60px;' },
+                    { label:'Al³⁺', count:1, type:'ion', style:'background:#b2aca0;' },
+                    { label:'NO₃⁻', count:3, type:'ion', style:'background:#9fc7e0;' }
+                ]}
             ];
 
             // 反应引擎：自动补齐反应物（添加虚拟离子），消耗并生成产物
@@ -887,14 +1037,14 @@
                                     type: 'ion',
                                     size: 46,
                                     virtual: true,
-                                    offsetX: Math.random() * 6 - 3,
-                                    offsetY: Math.random() * 6 - 3,
                                 });
                             }
                         }
                     }
-			leftParticles = available;
-			renderLeft();
+                    // 更新左边烧杯显示补齐后的粒子（虚拟粒子不显示，但会在消耗时删除）
+                    //leftParticles = available.filter(p => !p.virtual);
+                    leftParticles = available;
+                    renderLeft();
                     // 消耗所需数量的离子（包括真实和虚拟）
                     for (let label of Object.keys(need)) {
                         let toRemove = need[label];
@@ -918,8 +1068,6 @@
                                 style: style,
                                 size: type === 'precipitate' ? 60 : (type === 'gas' ? 58 : 46),
                                 virtual: false,
-                                offsetX: Math.random() * 6 - 3,
-                                offsetY: Math.random() * 6 - 3,
                             });
                         }
                     });
