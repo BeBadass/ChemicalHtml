@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>复分解反应微观模拟器</title>
     <style>
         * {
@@ -10,6 +10,9 @@
             user-select: none;
         }
         body {
+            width: 100%;
+            height: fit-content;
+            scale: initial;
             background: linear-gradient(145deg, #10343d 0%, #1b4f5a 100%);
             min-height: 100vh;
             display: flex;
@@ -27,6 +30,8 @@
             padding: 1.8rem 2rem 2.2rem 2rem;
             width: fit-content;
             max-width: 1500px;
+            transform: scale(0.5);
+            transform-origin: top left;
         }
         h1 {
             text-align: center;
