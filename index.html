@@ -10,8 +10,6 @@
             user-select: none;
         }
         body {
-            width: 100%;
-            height: fit-content;
             scale: initial;
             background: linear-gradient(145deg, #10343d 0%, #1b4f5a 100%);
             min-height: 100vh;
@@ -513,7 +511,6 @@
                 }
             }
 
-            // ========== 反应规则库 ==========
             const reactions = [
                 // 原有规则（保留）...
                 // 1. Na₂CO₃ + 2HCl → 2NaCl + H₂O + CO₂↑
@@ -999,6 +996,20 @@
                     { label:'AgCl', count:3, type:'precipitate', style:'background:#a7a7a7; width:60px;' },
                     { label:'Al³⁺', count:1, type:'ion', style:'background:#b2aca0;' },
                     { label:'NO₃⁻', count:3, type:'ion', style:'background:#9fc7e0;' }
+                ]},
+                // ========== 新增反应：CuO + H₂SO₄ = CuSO₄ + H₂O ==========
+                { reactants: { 'CuO':1, 'H⁺':2, 'SO₄²⁻':1 },
+                  products: [
+                    { label:'Cu²⁺', count:1, type:'ion', style:'background:#ce9b6b;' },
+                    { label:'SO₄²⁻', count:1, type:'ion', style:'background:#f5b27a;' },
+                    { label:'H₂O', count:1, type:'molecule', style:'background:#a5d0e1;' }
+                ]},
+                // ========== 新增反应：Fe₂O₃ + 3H₂SO₄ = Fe₂(SO₄)₃ + 3H₂O ==========
+                { reactants: { 'Fe₂O₃':1, 'H⁺':6, 'SO₄²⁻':3 },
+                  products: [
+                    { label:'Fe³⁺', count:2, type:'ion', style:'background:#b8735b;' },
+                    { label:'SO₄²⁻', count:3, type:'ion', style:'background:#f5b27a;' },
+                    { label:'H₂O', count:3, type:'molecule', style:'background:#a5d0e1;' }
                 ]}
             ];
 
